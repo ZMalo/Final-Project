@@ -273,7 +273,7 @@ designerData=select(designerData,-c("X"))
 
 ```
 
-```{r Top Designers, echo=FALSE}
+```{r Top Designers}
 gamedesigner<-left_join(data,designerData)
 
 result <- gamedesigner %>%
@@ -285,7 +285,7 @@ top10designers<-result2%>%head(10)
 print(top10designers)
 ```
 
-```{r barcharttop10, echo=FALSE}
+```{r barcharttop10}
 top10designers%>%ggplot(aes(x=reorder(designer,numowned),y=numowned))+
   geom_col()+
   ggtitle("Number of Games Owned by Designer of Game")+
@@ -307,7 +307,7 @@ is reported by users of BGG as them owning it.
 
 ### Do BoardGame DesignersImprove over Time?
 
-```{r getbetter, echo=FALSE}
+```{r getbetter}
 datatop10designers<-gamedesigner%>%dplyr::filter(designer%in%top10designers$designer)
 datatop10designers%>%ggplot(aes(x=yearpublished,y=average))+
   geom_point()+
@@ -324,7 +324,7 @@ higher ratings as there careers progress.
 ### What's Going on With Reiner Knizia?
 
 
-```{r avg ratinglinchart, echo=FALSE}
+```{r avg ratinglinchart}
 datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
 datareiner<-datatop10designers%>%group_by(yearpublished)%>%summarise(meanavg=mean(average),meanowned=mean(owned))
 datareiner%>%ggplot() + 
@@ -339,7 +339,7 @@ the plots of other top selling game designers. What could have caused this dip?
 
 ### Does Playing Time Have something to do with it?
 
-```{r playingtimerating, echo=FALSE}
+```{r playingtimerating}
 datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
 datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
 datatop10designers%>%ggplot(aes(y=average, x=as.factor(timecat))) + 
@@ -353,7 +353,7 @@ I noticed that the ratings of his games had tended to increase as the
 amount of playing time increased so I wondered if this had some thing to
 do with this.
 
-```{r histogram, echo=FALSE}
+```{r histogram}
 library(viridis)
 datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
 datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
@@ -372,7 +372,7 @@ were shorter in length. Since his games that were shorter in length tended to be
 
 ### Why doesn't He just Make longer Games?
 
-```{r playingtimeprice, echo=FALSE}
+```{r playingtimeprice}
 datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
 datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
 datatop10designers%>%drop_na(Price)%>%ggplot(aes(y=Price, x=as.factor(timecat))) + 
@@ -386,7 +386,7 @@ I had noticed that his games that were longer also sold for more money,
 so, wouldn't this be an incentive to make longer games.I think Something else
 had to be going on.
 
-```{r ownedvstimecat, echo=FALSE}
+```{r ownedvstimecat}
 datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
 datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
 datatop10designers%>%ggplot(aes(y=owned, x=as.factor(timecat))) + 
@@ -398,7 +398,7 @@ datatop10designers%>%ggplot(aes(y=owned, x=as.factor(timecat))) +
 
 I decided to look at the distribution of how many copies were owned by playing time category. This showed me there wasn't a significant difference in the median amount of owned games by playing time.
 
-```{r pointplotreinersize, echo=FALSE}
+```{r pointplotreinersize}
 datatop10designers%>%dplyr::filter(designer %in% c("Reiner Knizia"))%>%ggplot(aes(x=yearpublished,y=owned,size = playingTime))+
   geom_point(alpha=0.3)+
   theme(axis.text.x=element_text(angle=90, size=10, vjust=0.5))+
@@ -412,7 +412,7 @@ shorter length games. And that his most owned game is in one of the shorter time
 
 ### Money,Money,Money
 
-```{r moneymoneymoney, echo=FALSE}
+```{r moneymoneymoney}
 datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
 datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
 datatop10designers$pricetimesowned<-datatop10designers$owned*datatop10designers$Price

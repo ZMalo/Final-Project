@@ -262,7 +262,21 @@ designerData<-read.csv("C:/Users/zachi/OneDrive/Desktop/final project/data/BGGDe
 designerData=select(designerData,-c("X"))
 ```
 
+``` r
+gamedesigner<-left_join(data,designerData)
+```
+
     ## Joining with `by = join_by(id)`
+
+``` r
+result <- gamedesigner %>%
+  group_by(designer) %>%
+  summarise(count=n(),mean_value = mean(average),numowned=sum(owned))
+result2<-result%>%dplyr::filter(count>5)
+result2<-result2%>%dplyr::filter(!designer=="(Uncredited)")%>%arrange(-numowned)
+top10designers<-result2%>%head(10)
+print(top10designers)
+```
 
     ## # A tibble: 10 × 4
     ##    designer         count mean_value numowned
@@ -277,6 +291,15 @@ designerData=select(designerData,-c("X"))
     ##  8 Alan R. Moon        45       6.78   501910
     ##  9 Corey Konieczka     27       7.37   469966
     ## 10 Michael Kiesling    44       7.03   432739
+
+``` r
+top10designers%>%ggplot(aes(x=reorder(designer,numowned),y=numowned))+
+  geom_col()+
+  ggtitle("Number of Games Owned by Designer of Game")+
+  labs(x="Designer",y="Number of Games owned by BGG Members")+
+  
+  theme(axis.text.x=element_text(angle=90, size=10, vjust=0.5))
+```
 
 ![](Readme_files/figure-gfm/barcharttop10-1.png)<!-- -->
 
@@ -293,6 +316,17 @@ is reported by users of BGG as them owning it.
 
 ### Do BoardGame DesignersImprove over Time?
 
+``` r
+datatop10designers<-gamedesigner%>%dplyr::filter(designer%in%top10designers$designer)
+datatop10designers%>%ggplot(aes(x=yearpublished,y=average))+
+  geom_point()+
+  facet_wrap(~designer,  ncol=5,scales="free")+
+  theme(axis.text.x=element_text(angle=90, size=10, vjust=0.5))+
+  labs(x="Year Published",y="Rating of Game")+
+  ggtitle("The Ratings of Designers Games Over Time")+
+  geom_smooth(aes(yearpublished,average), method="lm", se=F)
+```
+
     ## `geom_smooth()` using formula = 'y ~ x'
 
 ![](Readme_files/figure-gfm/getbetter-1.png)<!-- -->
@@ -302,6 +336,16 @@ games that receive higher ratings as there careers progress.
 
 ### What’s Going on With Reiner Knizia?
 
+``` r
+datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
+datareiner<-datatop10designers%>%group_by(yearpublished)%>%summarise(meanavg=mean(average),meanowned=mean(owned))
+datareiner%>%ggplot() + 
+    geom_line(aes(y=meanavg, x=yearpublished))+
+    ylim(5.5,8)+
+  labs(x="Year Published",y="Average rating of games published")+
+  ggtitle("The average rating of games created in a year of Reiner Knizia Games Over Time")
+```
+
 ![](Readme_files/figure-gfm/avg%20ratinglinchart-1.png)<!-- -->
 
 I noticed a defined dip in Reiner Knizia’s plot that wasn’t present in
@@ -310,15 +354,38 @@ this dip?
 
 ### Does Playing Time Have something to do with it?
 
+``` r
+datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
+datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
+datatop10designers%>%ggplot(aes(y=average, x=as.factor(timecat))) + 
+    geom_boxplot()+
+    labs(x="Playing Time",y="Average Rating of  a Game")+
+  ggtitle("The Average Rating of Games by Playing Time")
+```
+
 ![](Readme_files/figure-gfm/playingtimerating-1.png)<!-- -->
 
 I noticed that the ratings of his games had tended to increase as the
 amount of playing time increased so I wondered if this had some thing to
 do with this.
 
+``` r
+library(viridis)
+```
+
     ## Warning: package 'viridis' was built under R version 4.4.3
 
     ## Loading required package: viridisLite
+
+``` r
+datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
+datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
+datatop10designers%>%ggplot(aes(fill=as.factor(timecat), x=yearpublished)) + 
+    geom_histogram(binwidth = 5,breaks = seq(1990, 2025, by = 5))+
+  labs(x="Year Published",y="Number of Games",fill = "Playing Time")+
+  scale_fill_viridis(discrete = TRUE,option="A")+
+  ggtitle("Number of Games by Year Published")
+```
 
 ![](Readme_files/figure-gfm/histogram-1.png)<!-- -->
 
@@ -332,17 +399,44 @@ explanation for the dip in average game rating per year.
 
 ### Why doesn’t He just Make longer Games?
 
+``` r
+datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
+datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
+datatop10designers%>%drop_na(Price)%>%ggplot(aes(y=Price, x=as.factor(timecat))) + 
+    geom_boxplot()+
+  labs(x="Playing Time",y="Price")+
+  ggtitle("Price by Playing Time")
+```
+
 ![](Readme_files/figure-gfm/playingtimeprice-1.png)<!-- -->
 
 I had noticed that his games that were longer also sold for more money,
 so, wouldn’t this be an incentive to make longer games.I think Something
 else had to be going on.
 
+``` r
+datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
+datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
+datatop10designers%>%ggplot(aes(y=owned, x=as.factor(timecat))) + 
+    geom_boxplot()+
+  labs(x="Playing Time",y="The Number of Games owned by BGG Members")+
+  ggtitle("Number Owned by BGG members by Playing Time")
+```
+
 ![](Readme_files/figure-gfm/ownedvstimecat-1.png)<!-- -->
 
 I decided to look at the distribution of how many copies were owned by
 playing time category. This showed me there wasn’t a significant
 difference in the median amount of owned games by playing time.
+
+``` r
+datatop10designers%>%dplyr::filter(designer %in% c("Reiner Knizia"))%>%ggplot(aes(x=yearpublished,y=owned,size = playingTime))+
+  geom_point(alpha=0.3)+
+  theme(axis.text.x=element_text(angle=90, size=10, vjust=0.5))+
+  labs(x="Year Published",y="The Number of Games owned by BGG Members",color = "Playing Time")+
+  
+  ggtitle("The Number Owned by BGG Members of Reiner Knizia Games vs. Time")
+```
 
 ![](Readme_files/figure-gfm/pointplotreinersize-1.png)<!-- -->
 
@@ -351,6 +445,17 @@ more copies as his shorter length games. And that his most owned game is
 in one of the shorter time categories
 
 ### Money,Money,Money
+
+``` r
+datatop10designers<-gamedesigner%>%dplyr::filter(designer %in% c("Reiner Knizia"))
+datatop10designers$timecat<-30*datatop10designers$playingTime%/%30
+datatop10designers$pricetimesowned<-datatop10designers$owned*datatop10designers$Price
+datatop10designers%>%drop_na(Price)%>%ggplot(aes(y=pricetimesowned, x=as.factor(timecat))) + 
+    geom_col()+
+  labs(x="Playing Time",y="Dollars")+
+  ggtitle("Sum of Price times the Number Owned by BGG members by Playing Time")+
+  scale_y_continuous(labels = scales::comma_format())
+```
 
 ![](Readme_files/figure-gfm/moneymoneymoney-1.png)<!-- -->
 
